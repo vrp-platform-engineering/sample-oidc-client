@@ -1,0 +1,30 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Client [MVC] [Code Flow]";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    
+    @if (HttpContext.Request.Query.ContainsKey("error"))
+    {
+        var error = HttpContext.Request.Query["error"].ToString();
+        var message = HttpContext.Request.Query["message"].ToString();
+        
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Authentication Notice:</strong> @message
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (User?.Identity?.IsAuthenticated == true)
+    {
+        <p>Logged in as: <strong>@User?.Identity?.Name</strong></p>
+    }
+@*     else
+    {
+        <p>You are not currently authenticated.</p>
+        <a href="/Account/Login" class="btn btn-primary">Sign In</a>
+    } *@
+</div>

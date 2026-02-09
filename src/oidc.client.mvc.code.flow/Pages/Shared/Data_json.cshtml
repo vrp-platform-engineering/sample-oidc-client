@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Response";
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.Success))
+{
+    <div class="alert alert-success" role="alert">
+        <strong>✅ Success!</strong> @ViewBag.Success
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.Error))
+{
+    <div class="alert alert-danger" role="alert">
+        <strong>❌ Error!</strong> @ViewBag.Error
+    </div>
+}
+
+<div class="text-left">
+    <pre>@ViewBag.Json</pre>
+</div>
+

@@ -21,6 +21,7 @@
         public string PostLogoutRedirectUri { get; set; }
 
         public bool? SkipOIDCServerCertificateCheck { get; set; }
+        public bool? UsePkce { get; set; }
 
         public ClientCertificateConfiguration ClientCertificate { get; set; }
     }

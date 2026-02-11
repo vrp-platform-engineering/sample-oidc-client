@@ -54,6 +54,7 @@ namespace oidc.client.mvc.code.flow.Support.IOC
                                options.ClientSecret = oidcConfig.ClientSecret;
                                options.ResponseType = oidcConfig.ResponseType;
                                options.SaveTokens = oidcConfig.SaveTokens ?? true;
+                               options.UsePkce = oidcConfig.UsePkce ?? true; // PKCE enabled by default; set to false in appsettings to disable
                                
                                // Configure callback paths
                                options.SignedOutCallbackPath = "/signout-callback-oidc";

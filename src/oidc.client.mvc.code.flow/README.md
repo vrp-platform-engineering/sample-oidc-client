@@ -21,11 +21,11 @@
 
 VeriPark IDP Service is a fully compliant **OAuth 2.0 / OpenID Connect** Identity Provider. It supports:
 
-- **Authorization Code Flow with PKCE** (required for all clients)
+- **Authorization Code Flow** (with optional PKCE per client configuration)
 - **Refresh Token Flow** (for long-lived sessions)
 - **Client-Initiated Logout** (coordinated logout across applications)
 
-> **Important:** PKCE (Proof Key for Code Exchange) is **required** for all authorization requests. This provides enhanced security against authorization code interception attacks.
+> **Note:** PKCE (Proof Key for Code Exchange) is **configured per-client** by VeriPark. If your client is configured with PKCE enabled, you must include `code_challenge` and `code_verifier` parameters. Check with VeriPark whether PKCE is required for your client.
 
 ### Endpoints
 
@@ -46,7 +46,7 @@ The following OIDC/OAuth 2.0 features are **not available**:
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Implicit Flow | ❌ Not Supported | Use Authorization Code Flow with PKCE instead |
+| Implicit Flow | ❌ Not Supported | Use Authorization Code Flow instead |
 | Resource Owner Password (ROPC) | ❌ Not Supported | Direct username/password authentication not allowed |
 | Client Credentials Flow | ❌ Not Supported | Machine-to-machine tokens not available |
 | Token Encryption | ❌ Disabled | Access tokens are signed but not encrypted |
@@ -69,10 +69,10 @@ The following OIDC/OAuth 2.0 features are **not available**:
          │  ─────────────────────────────────────────────>│
          │     ?client_id=...&redirect_uri=...            │
          │     &response_type=code&scope=openid...        │
-         │     &code_challenge=...&code_challenge_method=S256
+         │     &code_challenge=...&code_challenge_method=S256 (if PKCE required)
          │                                                │
          │                                    3. User logs in
-         │                                    4. User grants consent (if required)
+         │                                    4. User grants consent (if configured)
          │                                                │
          │  5. Redirect back with authorization code      │
          │  <─────────────────────────────────────────────│
@@ -213,7 +213,7 @@ Use your platform's OIDC library:
 
 ### Step 2: Initiate Login
 
-**Generate PKCE Values First:**
+**Generate PKCE Values First (if PKCE is required for your client):**
 1. Generate a random `code_verifier` (43-128 characters, URL-safe)
 2. Compute `code_challenge = BASE64URL(SHA256(code_verifier))`
 3. Store `code_verifier` securely (you'll need it for token exchange)
@@ -240,8 +240,8 @@ GET {Authority}/connect/authorize
 | `scope` | Space-separated scopes (from allowed scopes) |
 | `state` | Random string for CSRF protection |
 | `nonce` | Random string to prevent replay attacks |
-| `code_challenge` | **Required** - SHA256 hash of code_verifier, Base64URL encoded |
-| `code_challenge_method` | **Required** - Always `S256` |
+| `code_challenge` | SHA256 hash of code_verifier, Base64URL encoded (**required if PKCE is enabled for your client**) |
+| `code_challenge_method` | Always `S256` (**required if PKCE is enabled**) |
 
 ### Step 3: Handle Callback
 
@@ -263,7 +263,7 @@ grant_type=authorization_code
 &code_verifier={CodeVerifier}
 ```
 
-> **Note:** `code_verifier` is the original random string generated in Step 2. The IDP verifies that `SHA256(code_verifier)` matches the `code_challenge` sent during authorization.
+> **Note:** `code_verifier` is the original random string generated in Step 2. The IDP verifies that `SHA256(code_verifier)` matches the `code_challenge` sent during authorization. If PKCE is not required for your client, omit `code_verifier`.
 
 **Response:**
 ```json
@@ -291,7 +291,10 @@ grant_type=authorization_code
 1. User clicks "Login" in your application
 2. Redirect to VeriPark IDP authorization endpoint
 3. User authenticates (may include multi-step: password, OTP, security questions)
-4. **Consent screen** displayed (based on consent type configured by VeriPark)
+4. **Consent screen** displayed (if configured — depends on `ConsentType` setting:
+   - `implicit`: consent is skipped entirely
+   - `explicit`: consent is shown once per user/scope combination, then remembered
+   - `systematic`: consent is shown every time)
 5. User approves → Redirected back to your application with authorization code
 
 ### Token Refresh
